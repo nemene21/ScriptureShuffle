@@ -36,7 +36,9 @@ body {
     align-items: center;
     overflow-y: hidden;
 
-    padding-top: 96px;
+    margin-top: 96px;
+    margin-bottom: 96px;
+    height: fit-content;
 }
 
 .bar {

@@ -142,17 +142,6 @@ function make_guess(guess) {
 }
 
 function process_autocomplete(event) {
-    if (event.key === 'Enter' || event.keyCode === 13) {
-        let suggestions = document.getElementsByClassName("suggestion");
-        if (suggestions.length == 0) {
-            alert("Not a book in the Bible.");
-            return;
-        }
-        input.value = suggestions[0].textContent;
-        make_guess(input.value);
-        return;
-    }
-    
     clear_autocomplete();
     if (input.value == "")
         return;
@@ -170,6 +159,17 @@ function process_autocomplete(event) {
             suggestion.textContent = book_name;
             autocomplete.appendChild(suggestion);
         }
+    }
+
+    if (event.key === 'Enter' || event.keyCode === 13) {
+        let suggestions = document.getElementsByClassName("suggestion");
+        if (suggestions.length == 0) {
+            alert("Not a book in the Bible.");
+            return;
+        }
+        input.value = suggestions[0].textContent;
+        make_guess(input.value);
+        return;
     }
 }
 
