@@ -9,6 +9,54 @@ let body  = document.body;
 let input = document.getElementById("text_input");
 let autocomplete = document.getElementById("autocomplete");
 let guesses_left = 5;
+let finished, won;
+let wait;
+
+function update_timer_element() {
+    let timer_el = document.getElementById("timer");
+    let seconds = wait;
+
+    let minutes = Math.floor(seconds / 60);
+    seconds -= minutes * 60;
+
+    let hours = Math.floor(minutes / 60);
+    minutes -= hours * 60;
+
+    if (timer_el) {
+        timer_el.textContent = `${hours}:`;
+
+        if (String(minutes).length == 1)
+            timer_el.textContent += "0";
+        timer_el.textContent += `${minutes}:`;
+
+        if (String(seconds).length == 1)
+            timer_el.textContent += "0";
+        timer_el.textContent += `${seconds}`;
+    }
+}
+
+setInterval(() => {
+    wait--;
+    update_timer_element();
+}, 1000);
+
+function get_day() {
+    const seconds_in_day = 86400; // 60 * 60 * 24
+    const time = Math.floor(Date.now() / 1000); // Get current Unix time in seconds
+    const days = Math.floor(time / seconds_in_day); // Convert to days
+    wait = Math.abs(time - (days + 1) * seconds_in_day);
+    return days;
+}
+
+let seed = get_day();
+function random() {
+    const a = 1664525;
+    const c = 1013904223;
+    const m = 2 ** 32;
+
+    seed = (a * seed + c) % m;
+    return seed / m;
+}
 
 function clear_verses() {
     let verses;
@@ -25,7 +73,7 @@ function make_verse_tag(text) {
 }
 
 function rand_range(a, b) {
-    return Math.floor(a + ((b + 1) - a) * Math.random() * 0.99999);
+    return Math.floor(a + ((b + 1) - a) * random() * 0.99999);
 }
 
 function get_chapter(book, chapter) {
@@ -88,12 +136,12 @@ function reveal_neighbour() {
     get_chapter(book, chapter_on)
     .then(chapter => {
 
-        let dir = Math.random() > 0.5 ? -1 : 1;
+        let dir = random() > 0.5 ? -1 : 1;
         let new_verse = verses_taken[rand_range(0, verses_taken.length-1)] + dir;
         while ((verses_taken.includes(new_verse)) ||
             (new_verse === 0 || new_verse === chapter.length)) {
             
-            dir = Math.random() > 0.5 ? -1 : 1;
+            dir = random() > 0.5 ? -1 : 1;
             new_verse = verses_taken[rand_range(0, verses_taken.length-1)] + dir;
         }
 
@@ -119,7 +167,25 @@ function clear_autocomplete() {
     }
 }
 
+function end_screen(message) {
+    let screen = document.createElement("div");
+    screen.textContent = message;
+    screen.id = "end_screen";
+
+    screen.innerHTML += "<br><p>Next challenge in: </p>";
+
+    let timer_el = document.createElement("p");
+    timer_el.id = "timer";
+    screen.appendChild(timer_el);
+    update_timer_element()
+
+    body.appendChild(screen);
+}
+
 function make_guess(guess) {
+    if (finished)
+        return;
+    
     guesses_left--;
 
     guess = guess.toLowerCase();
@@ -129,14 +195,16 @@ function make_guess(guess) {
     let correct = guess === book;
 
     if (correct) {
-        alert(`You guessed correctly, the was ${nice_book_name}!`);
-        rand_verse();
+        end_screen(`You guessed correctly, the book was ${nice_book_name}!`);
+        finished = true;
+        won = false;
     } else {
         if (guesses_left != 0)
             reveal_neighbour();
         else {
-            alert(`The book was ${nice_book_name} :(`);
-            rand_verse();
+            finished = true;
+            won = false;
+            end_screen(`The book was ${nice_book_name} :(`);
         }
     }
 }
