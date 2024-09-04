@@ -37,6 +37,9 @@ function update_timer_element() {
 
 setInterval(() => {
     wait--;
+    if (wait < 0) {
+        location.reload();
+    }
     update_timer_element();
 }, 1000);
 
@@ -177,7 +180,12 @@ function end_screen(message) {
     let timer_el = document.createElement("p");
     timer_el.id = "timer";
     screen.appendChild(timer_el);
-    update_timer_element()
+    update_timer_element();
+
+    let date = new Date();
+    date.setTime(date.getTime() + (wait*1000));
+    document.cookie = `won=${won}; expires=${date.toUTCString()}; path=/; SameSite=Lax;`;
+    setTimeout(() => console.log(document.cookie), 100);
 
     body.appendChild(screen);
 }
@@ -185,12 +193,11 @@ function end_screen(message) {
 function make_guess(guess) {
     if (finished)
         return;
-    
+
     guesses_left--;
 
     guess = guess.toLowerCase();
     guess = guess.replace(" ", "");
-    console.log(book, guess);
 
     let correct = guess === book;
 
@@ -254,4 +261,17 @@ document.getElementById("input_form").addEventListener("submit", event => {
 
 document.addEventListener("DOMContentLoaded", event => {
     rand_verse();
+
+    let cookie = decodeURIComponent(document.cookie);
+    finished = cookie.startsWith("won");
+    console.log(cookie);
+    if (finished) {
+        won = document.cookie.substring(4, 5).startsWith("t");
+        if (won)
+            end_screen(`You guessed correctly, the book was ${nice_book_name}!`);
+        else
+            end_screen(`The book was ${nice_book_name} :(`);
+
+        return;
+    }
 });
